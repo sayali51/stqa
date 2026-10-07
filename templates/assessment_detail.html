@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Assessment #{{ a.id }}{% endblock %}
+{% block content %}
+<h2>Assessment #{{ a.id }}</h2>
+<p class="risk-badge risk-{{ a.risk_category|replace(' ', '-')|lower }}">{{ a.risk_category }}</p>
+
+<div class="bill-summary">
+    <p>BMI: {{ "%.2f"|format(a.bmi) }}</p>
+    <p>Risk Score: {{ "%.1f"|format(a.risk_score) }} / 100</p>
+    <p class="grand-total">Estimated Remaining Life Expectancy: {{ "%.1f"|format(a.estimated_remaining_years) }} years</p>
+</div>
+
+<table class="cart-table">
+    <thead><tr><th>Input</th><th>Value</th></tr></thead>
+    <tbody>
+        <tr><td>Age</td><td>{{ a.age }}</td></tr>
+        <tr><td>Gender</td><td>{{ a.gender }}</td></tr>
+        <tr><td>Height</td><td>{{ a.height_cm }} cm</td></tr>
+        <tr><td>Weight</td><td>{{ a.weight_kg }} kg</td></tr>
+        <tr><td>Smoker</td><td>{{ "Yes" if a.smoker else "No" }}</td></tr>
+        <tr><td>Alcohol frequency</td><td>{{ a.alcohol_frequency }}</td></tr>
+        <tr><td>Exercise frequency</td><td>{{ a.exercise_frequency }}</td></tr>
+        <tr><td>Family history</td><td>{{ "Yes" if a.family_history else "No" }}</td></tr>
+        <tr><td>Chronic condition</td><td>{{ "Yes" if a.chronic_condition else "No" }}</td></tr>
+    </tbody>
+</table>
+
+<p><a href="{{ url_for('history') }}">← Back to history</a></p>
+{% endblock %}

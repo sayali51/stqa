@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}New Assessment{% endblock %}
+{% block content %}
+<div class="form-card wide">
+    <h2>New Health Risk Assessment</h2>
+    <form method="POST" action="{{ url_for('new_assessment') }}">
+        <div class="form-row">
+            <div>
+                <label>Age (years)</label>
+                <input type="number" name="age" min="1" max="120" required>
+            </div>
+            <div>
+                <label>Gender</label>
+                <select name="gender" required>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div>
+                <label>Height (cm)</label>
+                <input type="number" step="0.1" name="height_cm" min="1" required>
+            </div>
+            <div>
+                <label>Weight (kg)</label>
+                <input type="number" step="0.1" name="weight_kg" min="1" required>
+            </div>
+        </div>
+
+        <label>Do you smoke?</label>
+        <select name="smoker">
+            <option value="no">No</option>
+            <option value="yes">Yes</option>
+        </select>
+
+        <label>Alcohol consumption frequency</label>
+        <select name="alcohol_frequency">
+            <option value="none">None</option>
+            <option value="moderate">Moderate</option>
+            <option value="heavy">Heavy</option>
+        </select>
+
+        <label>Exercise frequency</label>
+        <select name="exercise_frequency">
+            <option value="none">None</option>
+            <option value="moderate">Moderate</option>
+            <option value="regular">Regular</option>
+        </select>
+
+        <label>Family history of chronic disease?</label>
+        <select name="family_history">
+            <option value="no">No</option>
+            <option value="yes">Yes</option>
+        </select>
+
+        <label>Existing chronic condition (e.g. diabetes, hypertension)?</label>
+        <select name="chronic_condition">
+            <option value="no">No</option>
+            <option value="yes">Yes</option>
+        </select>
+
+        <button type="submit">Compute Assessment</button>
+    </form>
+</div>
+{% endblock %}

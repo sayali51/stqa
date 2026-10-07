@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}My Assessments{% endblock %}
+{% block content %}
+<h2>My Assessment History</h2>
+{% if not assessments %}
+    <p>No assessments yet. <a href="{{ url_for('new_assessment') }}">Create one</a></p>
+{% else %}
+    <table class="cart-table">
+        <thead><tr><th>ID</th><th>Risk Category</th><th>Risk Score</th><th>Est. Remaining Years</th><th></th></tr></thead>
+        <tbody>
+        {% for a in assessments %}
+            <tr>
+                <td>#{{ a.id }}</td>
+                <td><span class="risk-badge risk-{{ a.risk_category|replace(' ', '-')|lower }}">{{ a.risk_category }}</span></td>
+                <td>{{ "%.1f"|format(a.risk_score) }}</td>
+                <td>{{ "%.1f"|format(a.estimated_remaining_years) }}</td>
+                <td><a href="{{ url_for('assessment_detail', assessment_id=a.id) }}">View</a></td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
+{% endblock %}
