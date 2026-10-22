@@ -48,3 +48,15 @@ class Assessment(db.Model):
     estimated_remaining_years = db.Column(db.Float, nullable=False)
 
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class Feedback(db.Model):
+    """Quick user feedback about the whole assessment process."""
+    __tablename__ = "feedback"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    assessment_id = db.Column(db.Integer, db.ForeignKey("assessments.id"), nullable=True)
+    rating = db.Column(db.Integer, nullable=False)          # 1-5 stars
+    helpful = db.Column(db.String(10), nullable=False)      # yes / somewhat / no
+    comment = db.Column(db.String(500), nullable=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))

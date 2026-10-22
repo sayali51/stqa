@@ -14,8 +14,10 @@ mini-project. See business_logic.py for the academic disclaimer.)
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 
-from models import db, User, Assessment
-from business_logic import compute_assessment
+from models import db, User, Assessment, Feedback
+from business_logic import (compute_assessment, risk_breakdown, get_recommendations,
+                            what_if_scenarios, validate_feedback, BASE_LIFE_EXPECTANCY)
+import charts
 
 
 def create_app(test_config=None):
@@ -153,7 +155,21 @@ def create_app(test_config=None):
         if assessment.user_id != session["user_id"]:
             flash("You do not have access to this assessment.", "error")
             return redirect(url_for("history"))
-        return render_template("assessment_detail.html", a=assessment)
+        args = (assessment.bmi, assessment.smoker, assessment.alcohol_frequency,
+                assessment.exercise_frequency, assessment.family_history,
+                assessment.chronic_condition)
+        breakdown = risk_breakdown(*args)
+        advice = get_recommendations(assessment.risk_category, *args)
+        scenarios = what_if_scenarios(assessment.age, *args)
+        return render_template(
+            "assessment_detail.html", a=assessment, breakdown=breakdown, advice=advice,
+            scenarios=scenarios,
+            gauge=charts.risk_gauge(assessment.risk_score, assessment.risk_category),
+            factor_chart=charts.factor_bar_chart(breakdown),
+            years_chart=charts.years_comparison_chart(
+                assessment.age, assessment.estimated_remaining_years, BASE_LIFE_EXPECTANCY),
+            whatif_chart=charts.what_if_chart(assessment.risk_score, scenarios),
+        )
 
     @app.route("/history")
     @login_required
@@ -161,7 +177,36 @@ def create_app(test_config=None):
         assessments = Assessment.query.filter_by(
             user_id=session["user_id"]
         ).order_by(Assessment.id.desc()).all()
-        return render_template("history.html", assessments=assessments)
+        trend = charts.trend_chart([a.risk_score for a in reversed(assessments)])
+        return render_template("history.html", assessments=assessments, trend=trend)
+
+    @app.route("/feedback", methods=["GET", "POST"])
+    @login_required
+    def feedback():
+        assessment_id = request.values.get("assessment_id", type=int)
+        if assessment_id is not None:
+            owned = db.session.get(Assessment, assessment_id)
+            if owned is None or owned.user_id != session["user_id"]:
+                flash("Invalid assessment for feedback.", "error")
+                return redirect(url_for("feedback"))
+
+        if request.method == "POST":
+            try:
+                rating, helpful, comment = validate_feedback(
+                    request.form.get("rating"), request.form.get("helpful"),
+                    request.form.get("comment"))
+            except ValueError as e:
+                flash(str(e), "error")
+                return redirect(url_for("feedback", assessment_id=assessment_id)) \
+                    if assessment_id else redirect(url_for("feedback"))
+            db.session.add(Feedback(user_id=session["user_id"], assessment_id=assessment_id,
+                                    rating=rating, helpful=helpful, comment=comment))
+            db.session.commit()
+            flash("Thank you! Your feedback has been recorded.", "success")
+            return redirect(url_for("feedback"))
+
+        mine = Feedback.query.filter_by(user_id=session["user_id"]).order_by(Feedback.id.desc()).all()
+        return render_template("feedback.html", assessment_id=assessment_id, past=mine)
 
     return app
 

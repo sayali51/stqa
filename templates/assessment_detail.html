@@ -1,29 +1,87 @@
 {% extends "base.html" %}
 {% block title %}Assessment #{{ a.id }}{% endblock %}
 {% block content %}
-<h2>Assessment #{{ a.id }}</h2>
-<p class="risk-badge risk-{{ a.risk_category|replace(' ', '-')|lower }}">{{ a.risk_category }}</p>
+<h2>Assessment #{{ a.id }} — Results Dashboard</h2>
 
-<div class="bill-summary">
-    <p>BMI: {{ "%.2f"|format(a.bmi) }}</p>
-    <p>Risk Score: {{ "%.1f"|format(a.risk_score) }} / 100</p>
-    <p class="grand-total">Estimated Remaining Life Expectancy: {{ "%.1f"|format(a.estimated_remaining_years) }} years</p>
+<div class="grid-2">
+    <section class="card">
+        <h3>Risk level</h3>
+        {{ gauge }}
+        <p class="risk-badge risk-{{ a.risk_category|replace(' ', '-')|lower }}">{{ a.risk_category }}</p>
+    </section>
+    <section class="card">
+        <h3>Key numbers</h3>
+        <div class="bill-summary">
+            <p>BMI: {{ "%.2f"|format(a.bmi) }}</p>
+            <p>Risk Score: {{ "%.1f"|format(a.risk_score) }} / 100</p>
+            <p class="grand-total">Estimated Remaining Life Expectancy: {{ "%.1f"|format(a.estimated_remaining_years) }} years</p>
+        </div>
+        {{ years_chart }}
+    </section>
 </div>
 
-<table class="cart-table">
-    <thead><tr><th>Input</th><th>Value</th></tr></thead>
-    <tbody>
-        <tr><td>Age</td><td>{{ a.age }}</td></tr>
-        <tr><td>Gender</td><td>{{ a.gender }}</td></tr>
-        <tr><td>Height</td><td>{{ a.height_cm }} cm</td></tr>
-        <tr><td>Weight</td><td>{{ a.weight_kg }} kg</td></tr>
-        <tr><td>Smoker</td><td>{{ "Yes" if a.smoker else "No" }}</td></tr>
-        <tr><td>Alcohol frequency</td><td>{{ a.alcohol_frequency }}</td></tr>
-        <tr><td>Exercise frequency</td><td>{{ a.exercise_frequency }}</td></tr>
-        <tr><td>Family history</td><td>{{ "Yes" if a.family_history else "No" }}</td></tr>
-        <tr><td>Chronic condition</td><td>{{ "Yes" if a.chronic_condition else "No" }}</td></tr>
-    </tbody>
-</table>
+<section class="card">
+    <h3>What is driving your score?</h3>
+    <p class="muted">Red bars raise your risk, green bars lower it (points added to the score).</p>
+    {{ factor_chart }}
+</section>
+
+<section class="card">
+    <h3>Personalised advice</h3>
+    <p class="advice-headline">{{ advice.headline }}</p>
+    <ul class="advice-list">
+        {% for item in advice["items"] %}
+        <li class="advice advice-{{ item.priority }}">
+            <span class="priority-tag">{{ item.priority|upper }} PRIORITY</span>
+            <strong>{{ item.title }}</strong>
+            <p>{{ item.text }}</p>
+        </li>
+        {% endfor %}
+    </ul>
+</section>
+
+<section class="card">
+    <h3>What if you changed something?</h3>
+    {% if scenarios %}
+    <p class="muted">Estimated effect of changing one habit at a time (and all together).</p>
+    {{ whatif_chart }}
+    <table class="cart-table">
+        <thead><tr><th>Change</th><th>New score</th><th>New category</th><th>Years gained</th></tr></thead>
+        <tbody>
+        {% for s in scenarios %}
+            <tr><td>{{ s.label }}</td><td>{{ s.new_score }} ({{ s.score_change }})</td>
+                <td>{{ s.new_category }}</td><td>+{{ "%.1f"|format(s.years_gained) }} yrs</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>You have no modifiable risk factors left to improve in this model. Great job!</p>
+    {% endif %}
+</section>
+
+<details class="card">
+    <summary><strong>Inputs you provided</strong></summary>
+    <table class="cart-table">
+        <thead><tr><th>Input</th><th>Value</th></tr></thead>
+        <tbody>
+            <tr><td>Age</td><td>{{ a.age }}</td></tr>
+            <tr><td>Gender</td><td>{{ a.gender }}</td></tr>
+            <tr><td>Height</td><td>{{ a.height_cm }} cm</td></tr>
+            <tr><td>Weight</td><td>{{ a.weight_kg }} kg</td></tr>
+            <tr><td>Smoker</td><td>{{ "Yes" if a.smoker else "No" }}</td></tr>
+            <tr><td>Alcohol frequency</td><td>{{ a.alcohol_frequency }}</td></tr>
+            <tr><td>Exercise frequency</td><td>{{ a.exercise_frequency }}</td></tr>
+            <tr><td>Family history</td><td>{{ "Yes" if a.family_history else "No" }}</td></tr>
+            <tr><td>Chronic condition</td><td>{{ "Yes" if a.chronic_condition else "No" }}</td></tr>
+        </tbody>
+    </table>
+</details>
+
+<section class="card feedback-card" id="quick-feedback">
+    <h3>Quick feedback</h3>
+    {% set assessment_id = a.id %}{% set suffix = '-q' %}
+    {% include "_feedback_form.html" %}
+</section>
 
 <p><a href="{{ url_for('history') }}">← Back to history</a></p>
 {% endblock %}

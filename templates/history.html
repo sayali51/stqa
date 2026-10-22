@@ -5,6 +5,7 @@
 {% if not assessments %}
     <p>No assessments yet. <a href="{{ url_for('new_assessment') }}">Create one</a></p>
 {% else %}
+    <section class="card"><h3>Risk score trend</h3>{{ trend }}</section>
     <table class="cart-table">
         <thead><tr><th>ID</th><th>Risk Category</th><th>Risk Score</th><th>Est. Remaining Years</th><th></th></tr></thead>
         <tbody>
